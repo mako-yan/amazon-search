@@ -535,6 +535,16 @@
         </div>
         <div class="toggle-switch"></div>
       </div>
+      <div class="toggle-item" id="excludeChinaToggle" onclick="toggleOption('excludeChina')">
+        <div class="toggle-info">
+          <span class="toggle-icon">🚫</span>
+          <div>
+            <div class="toggle-label">中国からの出荷品を除く</div>
+            <div class="toggle-desc">「中国 出荷」をキーワードから除外します</div>
+          </div>
+        </div>
+        <div class="toggle-switch"></div>
+      </div>
     </div>
 
     <!-- 評価 -->
@@ -575,26 +585,6 @@
     条件をリセット
   </button>
 
-  <!-- 複数キーワード結果 -->
-  <div class="multi-results" id="multiResults">
-    <div class="multi-results-title">🔗 生成されたリンク一覧</div>
-    <div class="result-links" id="resultLinks"></div>
-  </div>
-
-  <!-- URL プレビュー（通常検索） -->
-  <div class="url-preview" id="urlPreview">
-    <div class="multi-results-title">🔗 生成されたURL</div>
-    <div class="url-preview-box" id="urlPreviewBox"></div>
-  </div>
-
-  <!-- 将来機能：アラート予告 -->
-  <div class="alert-banner" style="margin-top: 16px;">
-    <span class="alert-banner-icon">🔔</span>
-    <div class="alert-banner-text">
-      <strong>価格アラート機能（近日公開予定）</strong>
-      気になった商品の価格が下がったらお知らせする機能を準備中です。
-    </div>
-  </div>
 
 </main>
 
@@ -603,6 +593,7 @@
   let selectedCategory = '';
   let saleEnabled = false;
   let primeEnabled = false;
+  let excludeChina = false;
   let selectedRating = '';
   let selectedSort = '';
   let multiKeywords = [];
@@ -665,6 +656,9 @@
     } else if (type === 'prime') {
       primeEnabled = !primeEnabled;
       document.getElementById('primeToggle').classList.toggle('active', primeEnabled);
+    } else if (type === 'excludeChina') {
+      excludeChina = !excludeChina;
+      document.getElementById('excludeChinaToggle').classList.toggle('active', excludeChina);
     }
   }
 
@@ -684,7 +678,9 @@
 
   // --- URL generation ---
   function generateUrl(keyword) {
-    let url = 'https://www.amazon.co.jp/s?k=' + encodeURIComponent(keyword);
+    let kw = keyword;
+    if (excludeChina) kw += ' -中国 -中国発送 -中国出荷';
+    let url = 'https://www.amazon.co.jp/s?k=' + encodeURIComponent(kw);
     if (selectedCategory) url += '&i=' + selectedCategory;
     const minP = document.getElementById('minPrice').value;
     const maxP = document.getElementById('maxPrice').value;
@@ -705,22 +701,10 @@
     const isMultiOpen = document.getElementById('multiArea').classList.contains('open');
 
     if (isMultiOpen && multiKeywords.length > 0) {
-      // Multi keyword mode: combine all keywords into one search
       const combinedKeyword = multiKeywords.join(' ');
       const url = generateUrl(combinedKeyword);
-      const container = document.getElementById('resultLinks');
-      container.innerHTML = `<a class="result-link" href="${url}" target="_blank" rel="noopener">
-        <div class="result-link-kw">
-          <span class="kw-badge">検索</span>
-          <span>${escapeHtml(combinedKeyword)}</span>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>`;
-      document.getElementById('multiResults').classList.add('show');
-      document.getElementById('urlPreview').classList.remove('show');
-      document.getElementById('multiResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.open(url, '_blank', 'noopener');
     } else {
-      // Single keyword mode
       const kw = document.getElementById('mainKeyword').value.trim();
       if (!kw) {
         document.getElementById('mainKeyword').focus();
@@ -729,9 +713,6 @@
         return;
       }
       const url = generateUrl(kw);
-      document.getElementById('urlPreviewBox').textContent = url;
-      document.getElementById('urlPreview').classList.add('show');
-      document.getElementById('multiResults').classList.remove('show');
       window.open(url, '_blank', 'noopener');
     }
   }
@@ -748,6 +729,7 @@
     selectedCategory = '';
     saleEnabled = false;
     primeEnabled = false;
+    excludeChina = false;
     selectedRating = '';
     selectedSort = '';
     multiKeywords = [];
@@ -757,12 +739,11 @@
     document.querySelectorAll('.category-btn').forEach((b,i) => b.classList.toggle('active', i===0));
     document.getElementById('saleToggle').classList.remove('active');
     document.getElementById('primeToggle').classList.remove('active');
+    document.getElementById('excludeChinaToggle').classList.remove('active');
     document.getElementById('discountRow').classList.remove('show');
     document.getElementById('discountInput').value = '10';
     document.querySelectorAll('.rating-btn').forEach((b,i) => b.classList.toggle('active', i===0));
     document.querySelectorAll('.sort-btn').forEach((b,i) => b.classList.toggle('active', i===0));
-    document.getElementById('multiResults').classList.remove('show');
-    document.getElementById('urlPreview').classList.remove('show');
   }
 </script>
 </body>
